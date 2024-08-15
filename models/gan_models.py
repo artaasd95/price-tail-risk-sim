@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Generator(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, dropout_prob):
-        super(Generator, self).__init__()
+class MainGenerator(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, dropout_prob, output_size):
+        super(MainGenerator, self).__init__()
         self.num_layers = num_layers
         self.hidden_size = hidden_size
         
@@ -13,29 +13,41 @@ class Generator(nn.Module):
                             num_layers=num_layers, batch_first=True, dropout=dropout_prob)
         
         # Fully connected layers
-        self.fc1 = nn.Linear(hidden_size, 64)
+        self.fc1 = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
         # LSTM layer
         out, _ = self.lstm(x)
         
         # Use only the output from the last time step
-        out = out[:, -1, :]
+        out = self.fc1(out)
         
         return out
 
 
 class NoiseGenerator(nn.Module):
-    def __init__(self, latent_dim, output_size):
+    def __init__(self, input_size, hidden_size, output_size, dropout_prob):
         super(NoiseGenerator, self).__init__()
-        self.fc1 = nn.Linear(latent_dim, 128)
-        self.fc2 = nn.Linear(128, 256)
-        self.fc3 = nn.Linear(256, output_size)
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.fc3 = nn.Linear(hidden_size, hidden_size)
+        self.fc4 = nn.Linear(hidden_size, hidden_size)
+        self.fc5 = nn.Linear(hidden_size, hidden_size)
+        self.fc6 = nn.Linear(hidden_size, output_size)
+        self.drop_out = nn.Dropout(dropout_prob)
 
     def forward(self, z2):
         x = torch.relu(self.fc1(z2))
+        x = self.drop_out(x)
         x = torch.relu(self.fc2(x))
-        x = torch.tanh(self.fc3(x))
+        x = self.drop_out(x)
+        x = torch.relu(self.fc3(x))
+        x = self.drop_out(x)
+        x = torch.relu(self.fc4(x))
+        x = self.drop_out(x)
+        x = torch.relu(self.fc5(x))
+        x = self.drop_out(x)
+        x = torch.tanh(self.fc6(x))
         return x
 
 
