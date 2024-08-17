@@ -74,9 +74,6 @@ class Discriminator(nn.Module):
         # LSTM layer
         out, _ = self.lstm(x)
         
-        # Use only the output from the last time step
-        out = out[:, -1, :]
-        
         # Fully connected layers
         out = self.leaky_relu(self.fc1(out))
         out = self.sigmoid(self.fc2(out))
@@ -86,8 +83,11 @@ class Discriminator(nn.Module):
 
 def discriminator_loss(real_data, fake_data, real_tail, fake_tail):
     # Binary Cross Entropy loss for real vs fake
-    real_loss = torch.mean(torch.log(real_data + 1e-8))
-    fake_loss = torch.mean(torch.log(1 - fake_data + 1e-8))
+    # real_loss = torch.mean(torch.log(real_data + 1e-8))
+    # fake_loss = torch.mean(torch.log(1 - fake_data + 1e-8))
+
+    real_loss = F.binary_cross_entropy(fake_data, real_data)
+    fake_loss = F.binary_cross_entropy(fake_tail, real_tail)
     
     # Log loss for tail distribution (checking if fake_tail data comes from a fat-tail distribution)
     tail_loss = torch.mean((fake_tail - real_tail) ** 2)
@@ -95,12 +95,16 @@ def discriminator_loss(real_data, fake_data, real_tail, fake_tail):
     total_loss = - (real_loss + fake_loss) + tail_loss
     return total_loss
 
-def generator_loss(fake_data, fake_tail):
+def generator_loss(real_data, fake_data, real_tail, fake_tail):
     # Adversarial loss for the generators
-    main_gen_loss = torch.mean(torch.log(fake_data + 1e-8))
+    #main_gen_loss = torch.mean(torch.log(fake_data + 1e-8))
+
+    main_gen_loss = F.kl_div(fake_data, real_data)
     
     # Tail distribution regularization for noise generator
-    noise_gen_loss = torch.mean((fake_tail - 1) ** 2)
+    #noise_gen_loss = torch.mean((fake_tail - 1) ** 2)
+
+    noise_gen_loss = F.kl_div(fake_tail, real_tail)
     
-    total_loss = -main_gen_loss + noise_gen_loss
+    total_loss = main_gen_loss + noise_gen_loss
     return total_loss
