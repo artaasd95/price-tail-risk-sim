@@ -200,3 +200,4 @@ pass
 *.docx
 *.pdf
 *.pkl
+*.pickle
