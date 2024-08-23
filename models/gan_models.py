@@ -47,7 +47,7 @@ class NoiseGenerator(nn.Module):
         x = self.drop_out(x)
         x = torch.relu(self.fc5(x))
         x = self.drop_out(x)
-        x = torch.tanh(self.fc6(x))
+        x = self.fc6(x)
         return x
 
 
