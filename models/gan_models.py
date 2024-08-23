@@ -16,11 +16,12 @@ class MainGenerator(nn.Module):
         self.fc1 = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
+        x = x.unsqueeze(1)
         # LSTM layer
         out, _ = self.lstm(x)
         
         # Use only the output from the last time step
-        out = self.fc1(out)
+        out = self.fc1(out[:, -1, :])
         
         return out
 
@@ -68,14 +69,15 @@ class Discriminator(nn.Module):
         
         # Activation functions
         self.leaky_relu = nn.LeakyReLU(0.2)
-        self.sigmoid = nn.Sigmoid()
+        #self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
+        x = x.unsqueeze(1)
         # LSTM layer
         out, _ = self.lstm(x)
         
         # Fully connected layers
-        out = self.leaky_relu(self.fc1(out))
+        out = self.leaky_relu(self.fc1(out[:, -1, :]))
         out = self.fc2(out)
         #out = self.sigmoid(self.fc2(out))
         return out

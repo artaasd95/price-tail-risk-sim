@@ -172,6 +172,7 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,jupyternotebooks
 
 
+capi.py
 pass
 .log
 *.log
@@ -201,3 +202,4 @@ pass
 *.pdf
 *.pkl
 *.pickle
+
