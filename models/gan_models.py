@@ -82,5 +82,3 @@ class Discriminator(nn.Module):
         #out = self.sigmoid(self.fc2(out))
         return out
 
-
-
