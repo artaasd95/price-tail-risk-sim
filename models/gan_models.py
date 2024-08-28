@@ -60,25 +60,33 @@ class NoiseGenerator(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, dropout_prob):
         super(NoiseGenerator, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.lstm = nn.LSTM(input_size=hidden_size, hidden_size=256,
+                            num_layers=3, batch_first=True, dropout=dropout_prob)
+        self.fc2 = nn.Linear(256, hidden_size)
         self.fc3 = nn.Linear(hidden_size, hidden_size)
         self.fc4 = nn.Linear(hidden_size, hidden_size)
-        self.fc5 = nn.Linear(hidden_size, hidden_size)
-        self.fc6 = nn.Linear(hidden_size, output_size)
-        self.drop_out = nn.Dropout(dropout_prob)
+        self.fc5 = nn.Linear(hidden_size, output_size)
+        self.drop_out1 = nn.Dropout(dropout_prob)
+        self.drop_out2 = nn.Dropout(dropout_prob)
+        self.drop_out3 = nn.Dropout(dropout_prob)
+        self.drop_out4 = nn.Dropout(dropout_prob)
+
 
     def forward(self, z2):
         x = torch.relu(self.fc1(z2))
-        x = self.drop_out(x)
+        x = self.drop_out1(x)
+        x = x.unsqueeze(1)
+        # LSTM layer
+        out, _ = self.lstm(x)
+        # Fully connected layers
+        x = torch.relu(out[:, -1, :])
         x = torch.relu(self.fc2(x))
-        x = self.drop_out(x)
+        x = self.drop_out2(x)
         x = torch.relu(self.fc3(x))
-        x = self.drop_out(x)
+        x = self.drop_out3(x)
         x = torch.relu(self.fc4(x))
-        x = self.drop_out(x)
-        x = torch.relu(self.fc5(x))
-        x = self.drop_out(x)
-        x = F.tanh(self.fc6(x))
+        x = self.drop_out4(x)
+        x = F.tanh(self.fc5(x))
         return x
     
 
@@ -89,20 +97,20 @@ class NoiseDiscriminator(nn.Module):
         self.fc2 = nn.Linear(hidden_size, hidden_size)
         self.fc3 = nn.Linear(hidden_size, hidden_size)
         self.fc4 = nn.Linear(hidden_size, hidden_size)
-        self.fc5 = nn.Linear(hidden_size, hidden_size)
-        self.fc6 = nn.Linear(hidden_size, output_size)
-        self.drop_out = nn.Dropout(dropout_prob)
+        self.fc5 = nn.Linear(hidden_size, output_size)
+        self.drop_out1 = nn.Dropout(dropout_prob)
+        self.drop_out2 = nn.Dropout(dropout_prob)
+        self.drop_out3 = nn.Dropout(dropout_prob)
+        self.drop_out4 = nn.Dropout(dropout_prob)
 
     def forward(self, z2):
         x = torch.relu(self.fc1(z2))
-        x = self.drop_out(x)
+        x = self.drop_out1(x)
         x = torch.relu(self.fc2(x))
-        x = self.drop_out(x)
+        x = self.drop_out2(x)
         x = torch.relu(self.fc3(x))
-        x = self.drop_out(x)
+        x = self.drop_out3(x)
         x = torch.relu(self.fc4(x))
-        x = self.drop_out(x)
-        x = torch.relu(self.fc5(x))
-        x = self.drop_out(x)
-        x = self.fc6(x)
+        x = self.drop_out4(x)
+        x = F.sigmoid(self.fc5(x))
         return x
